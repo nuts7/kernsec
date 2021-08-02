@@ -1,0 +1,2 @@
+Afficher les protection en kernel land
+	KASLR-SMEP-SMAP-KPTR RESTRICT-KPTI
