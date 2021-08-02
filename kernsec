@@ -1,0 +1,29 @@
+#!/bin/bash
+
+red="\e[31m"
+green="\e[32m"
+bold="\e[1m"
+unbold="\e[21m"
+reset_attri="\e[0m"
+
+smep_detect() {
+        smep=$(grep -o -a -m 1 -h -r 'smep' /proc/cpuinfo | head -1)
+
+        if [[ "$smep" == "smep" ]]; then
+                echo -e "${green}[+] ${bold}SMEP${unbold} : enabled.${reset_attri}"
+        else
+                echo -e "${red}[-] ${bold}SMEP${unbold} : disabled.${reset_attri}"
+        fi
+}
+
+kptr_restrict_detect() {
+        kptr=$(cat /proc/kallsyms | cut -c 1-16)
+
+        if [[ "$kptr" == *"0000000000000000"* ]]; then
+                echo "[+] KPTR Restrict : enabled."
+        else
+                echo "[-] KPTR Restrict : disabled."
+        fi
+}
+smep_detect
+kptr_restrict_detect
