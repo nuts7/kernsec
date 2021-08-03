@@ -1,0 +1,146 @@
+#!/bin/bash
+
+red="\e[31m"
+green="\e[32m"
+bold="\e[1m"
+unbold="\e[21m"
+reset_attri="\e[0m"
+
+welcome_kern()
+{
+echo -en "
+⌜––––––––––––––––––––––––––––––––––––––––––––––––⌝
+│                    ${red}KERNSEC${reset_attri}                     │
+│                                                │
+│${red}° ₒ ๐  ॰°ₒ  ˚ ๐ °৹๐ ˚॰° ˚৹ ॰ₒ๐ ॰ₒ๐ ˚°ₒ৹๐  ৹๐๐ ˚๐${reset_attri}│
+⌞––––––––––––––––––––––––––––––––––––––––––––––––⌟
+${BOLD}OS Information:${reset_attri}
+
+OS: $(uname -o)
+USER: $(whoami)
+Arch: $(uname -m)
+Kernel name: $(uname -s)
+Kernel version: $(uname -r)
+––––––––––––––––––––––––––––––––––––––––––––––––––
+${BOLD}Protection information:${reset_attri}
+
+"
+}
+
+typeofvar () {
+
+    local type_signature=$(declare -p "$1" 2>/dev/null)
+
+    if [[ "$type_signature" =~ "declare --" ]]; then
+        printf "string"
+    elif [[ "$type_signature" =~ "declare -a" ]]; then
+        printf "array"
+    elif [[ "$type_signature" =~ "declare -A" ]]; then
+        printf "map"
+    else
+        printf "none"
+    fi
+
+}
+
+kaslr_detect() {
+        kaslr=$(grep "2" /proc/sys/kernel/randomize_va_space)
+
+        if [[ "$kaslr" == "2" ]]; then
+                echo -e "${green}[+] ${bold}KASLR${unbold} : enabled.${reset_attri}"
+        else
+                echo -e "${red}[-] ${bold}KASLR${unbold} : disabled.${reset_attri}"
+        fi
+}
+
+smep_detect() {
+        smep=$(grep -o -a -m 1 -h -r 'smep' /proc/cpuinfo | head -1)
+
+        if [[ "$smep" == "smep" ]]; then
+                echo -e "${green}[+] ${bold}SMEP${unbold} : enabled.${reset_attri}"
+        else
+                echo -e "${red}[-] ${bold}SMEP${unbold} : disabled.${reset_attri}"
+        fi
+}
+
+smap_detect() {
+        smap=$(grep -o -a -m 1 -h -r 'smap' /proc/cpuinfo | head -1)
+
+        if [[ "$smap" == "smap" ]]; then
+                echo -e "${green}[+] ${bold}SMAP${unbold} : enabled.${reset_attri}"
+        else
+                echo -e "${red}[-] ${bold}SMAP${unbold} : disabled.${reset_attri}"
+        fi
+}
+
+kpti_detect() {
+        kpti=$(dmesg | grep -o -a "Kernel/User page tables isolation: enabled")
+        cmdlpti=$(grep pti /proc/cmdline)
+
+        if [[ "$kpti" ]];then
+                if [[ "$kpti" == "Kernel/User page tables isolation: enabled" ]]; then
+                        echo -e "${green}[+] ${bold}KPTI${unbold} : enabled.${reset_attri}"
+                else
+                        echo -e "${red}[-] ${bold}KPTI${unbold} : disabled.${reset_attri}"
+                fi
+        elif [[ "$cmdlpti" ]];then
+                echo -e "${green}[+] ${bold}KPTI${unbold} : enabled.${reset_attri}"
+        else
+                echo -e "${red}[!] Uneable to check if kpti is enabled/disabled \n[!] Please run the script on an equipped virtual machine with permission to run 'dmesg'.${reset_attri}"
+
+        fi
+}
+
+mmap_min_addr() {
+        mmap=$(cat /proc/sys/vm/mmap_min_addr)
+        echo -e "${green}[+] ${bold}mmap_min_addr${unbold} at : 0x$mmap${reset_attri}"
+}
+
+kptr_restrict(){
+        kptr=$(grep "prepare_kernel_cred" /proc/kallsyms | head -1)
+
+        if [[ ${kptr:0:8} == "00000000" ]]; then
+                echo -e "${green}[+] ${bold}KPTR RESTRICT${unbold} : enabled.${reset_attri}"
+        else
+                echo -e "${red}[-] ${bold}KPTR RESTRICT${unbold} : disabled.${reset_attri}"
+        fi
+}
+
+parsing_addr(){
+        
+        commit=$(grep "commit_creds" /proc/kallsyms | head -1)
+        parsecommit64=${commit:0:16}
+
+        prep=$(grep "prepare_kernel_cred" /proc/kallsyms | head -1)
+        parseprep64=${prep:0:16}
+
+        commit32=$(grep "commit_creds" /proc/kallsyms | head -1)
+        parsecommit32=${commit32:0:8}
+
+        prep32=$(grep "prepare_kernel_cred" /proc/kallsyms | head -1)
+        parseprep32=${prep32:0:8}
+        
+
+
+        echo -en "––––––––––––––––––––––––––––––––––––––––––––––––––
+Useful information:
+
+x86-64:
+commit_creds: 0x$parsecommit64
+prepare_kernel_cred: 0x$parseprep64
+
+x86:
+commit_creds: 0x$parsecommit32
+prepare_kernel_cred: 0x$parseprep32
+
+"
+}
+
+welcome_kern
+kaslr_detect
+smep_detect
+smap_detect
+mmap_min_addr
+kptr_restrict
+kpti_detect
+parsing_addr
