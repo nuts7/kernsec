@@ -29,17 +29,17 @@ ${BOLD}Protection information:${reset_attri}
 
 typeofvar () {
 
-    local type_signature=$(declare -p "$1" 2>/dev/null)
+	local type_signature=$(declare -p "$1" 2>/dev/null)
 
-    if [[ "$type_signature" =~ "declare --" ]]; then
-        printf "string"
-    elif [[ "$type_signature" =~ "declare -a" ]]; then
-        printf "array"
-    elif [[ "$type_signature" =~ "declare -A" ]]; then
-        printf "map"
-    else
-        printf "none"
-    fi
+	if [[ "$type_signature" =~ "declare --" ]]; then
+        	printf "string"
+	elif [[ "$type_signature" =~ "declare -a" ]]; then
+		printf "array"
+	elif [[ "$type_signature" =~ "declare -A" ]]; then
+		printf "map"
+	else
+		printf "none"
+	fi
 
 }
 
@@ -86,7 +86,7 @@ kpti_detect() {
         elif [[ "$cmdlpti" ]];then
                 echo -e "${green}[+] ${bold}KPTI${unbold} : enabled.${reset_attri}"
         else
-                echo -e "${red}[!] Uneable to check if kpti is enabled/disabled \n[!] Please run the script on an equipped virtual machine with permission to run 'dmesg'.${reset_attri}"
+                echo -e "${red}[!] Unenable to check if kpti is enabled/disabled \n[!] Please run the script on an equipped virtual machine with permission to run 'dmesg'.${reset_attri}"
 
         fi
 }
@@ -125,7 +125,7 @@ parsing_addr(){
         echo -en "––––––––––––––––––––––––––––––––––––––––––––––––––
 Useful information:
 
-x86-64:
+x64:
 commit_creds: 0x$parsecommit64
 prepare_kernel_cred: 0x$parseprep64
 
