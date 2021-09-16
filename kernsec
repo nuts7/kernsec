@@ -6,8 +6,7 @@ bold="\e[1m"
 unbold="\e[21m"
 reset_attri="\e[0m"
 
-welcome_kern()
-{
+welcome_kern() {
 echo -en "
 ⌜––––––––––––––––––––––––––––––––––––––––––––––––⌝
 │                    ${red}KERNSEC${reset_attri}                     │
@@ -96,7 +95,7 @@ mmap_min_addr() {
         echo -e "${green}[+] ${bold}mmap_min_addr${unbold} at : 0x$mmap${reset_attri}"
 }
 
-kptr_restrict(){
+kptr_restrict() {
         kptr=$(grep "prepare_kernel_cred" /proc/kallsyms | head -1)
 
         if [[ ${kptr:0:8} == "00000000" ]]; then
@@ -106,21 +105,21 @@ kptr_restrict(){
         fi
 }
 
-parsing_addr(){
-        
-        commit=$(grep "commit_creds" /proc/kallsyms | head -1)
-        parsecommit64=${commit:0:16}
+parsing_addr() {
+        ARCH=$(uname -m)
+        if [[ ${ARCH} == "x86_64" ]]; then
+                commit=$(grep "commit_creds" /proc/kallsyms | head -1)
+                parsecommit64=${commit:0:16}
 
-        prep=$(grep "prepare_kernel_cred" /proc/kallsyms | head -1)
-        parseprep64=${prep:0:16}
+                prep=$(grep "prepare_kernel_cred" /proc/kallsyms | head -1)
+                parseprep64=${prep:0:16}
+        else
+                commit32=$(grep "commit_creds" /proc/kallsyms | head -1)
+                parsecommit32=${commit32:0:8}
 
-        commit32=$(grep "commit_creds" /proc/kallsyms | head -1)
-        parsecommit32=${commit32:0:8}
-
-        prep32=$(grep "prepare_kernel_cred" /proc/kallsyms | head -1)
-        parseprep32=${prep32:0:8}
-        
-
+                prep32=$(grep "prepare_kernel_cred" /proc/kallsyms | head -1)
+                parseprep32=${prep32:0:8}
+        fi
 
         echo -en "––––––––––––––––––––––––––––––––––––––––––––––––––
 Useful information:
@@ -136,11 +135,21 @@ prepare_kernel_cred: 0x$parseprep32
 "
 }
 
+dmesg_restrict() {
+        result_dmesg=$(sysctl kernel.dmesg_restrict | cut -f2 -d"=")
+        if [[ ${result_dmesg:1:2} == "1" ]]; then
+            echo -e "${green}[+] ${bold}dmesg_restrict${unbold} : enabled.${reset_attri}"
+        else
+            echo -e "${red}[-] ${bold}dmesg_restrict${unbold} : disabled.${reset_attri}"
+        fi    
+}
+
 welcome_kern
 kaslr_detect
 smep_detect
 smap_detect
 mmap_min_addr
+dmesg_restrict
 kptr_restrict
 kpti_detect
 parsing_addr
